@@ -1,0 +1,7 @@
+---
+UBUNTU_DOCKER_REPO: https://download.docker.com/linux/ubuntu
+UBUNTU_VERSION_CODE_NAME: focal
+UBUNTU_DOCKER_GPG_KEY_URL: https://download.docker.com/linux/ubuntu/gpg
+UBUNTU_STORAGE_PATH: /mnt/storage
+UBUNTU_DOCKER_NEW_PATH: /mnt/storage/docker
+UBUNTU_STORAGE_BLOCK: /dev/sdb

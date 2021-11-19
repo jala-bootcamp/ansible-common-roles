@@ -1,0 +1,75 @@
+---
+- name: "Allow wheel users to sudo without a password"
+  lineinfile:
+    dest: "/etc/sudoers"
+    state: "present"
+    regexp: "^%wheel"
+    line: "%wheel ALL=(ALL) NOPASSWD: ALL"
+
+- name: Create users
+  ansible.builtin.user:
+    name: "{{ item }}"
+    shell: /bin/bash
+    groups: users,docker
+    append: true
+  loop: "{{ users }}"
+  tags:
+    - populate_users
+
+- name: Create admins
+  ansible.builtin.user:
+    name: "{{ item }}"
+    shell: /bin/bash
+    groups: wheel
+    append: true
+  loop: "{{ admins }}"
+  tags:
+    - populate_admins
+
+- name: Create service accounts
+  ansible.builtin.user:
+    name: "{{ item }}"
+    shell: /bin/bash
+    groups: docker
+    append: true
+  loop: "{{ service_accounts }}"
+  tags:
+    - populate_service_accounts
+
+- name: "Add authorized keys"
+  authorized_key:
+    user: "{{ item }}"
+    key: "{{ lookup('file', 'files/' + item + '.key.pub') }}"
+  loop: "{{ users + admins + service_accounts }}"
+  tags:
+    - populate_keys
+
+- name: Remove all users
+  ansible.builtin.user:
+    name: "{{ item }}"
+    state: absent
+    remove: true
+  loop: "{{ users }}"
+  when: remove_all_users is defined
+  tags:
+    - remove_users
+
+- name: Remove admins
+  ansible.builtin.user:
+    name: "{{ item }}"
+    state: absent
+    remove: true
+  loop: "{{ admins }}"
+  when: remove_all_admins is defined
+  tags:
+    - remove_admins
+
+- name: Remove service accounts
+  ansible.builtin.user:
+    name: "{{ item }}"
+    state: absent
+    remove: true
+  loop: "{{ service_accounts }}"
+  when: remove_all_service_accounts is defined
+  tags:
+    - remove_all_service_accounts

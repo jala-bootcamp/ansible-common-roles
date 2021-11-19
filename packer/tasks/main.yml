@@ -1,0 +1,12 @@
+---
+- name: Add Hashicorp repository
+  yum_repository:
+    name: hashicorp
+    description: Hashicorp repo
+    baseurl: https://rpm.releases.hashicorp.com/AmazonLinux/$releasever/$basearch/stable
+    gpgkey: https://rpm.releases.hashicorp.com/gpg
+
+- name: Install Packer
+  yum:
+    name: packer
+    state: latest
