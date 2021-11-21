@@ -1,0 +1,84 @@
+- name: Create storage directory
+  ansible.builtin.file:
+    path: "{{ UBUNTU_STORAGE_PATH }}"
+    state: directory
+    mode: '0755'
+  tags:
+    - setup_disk_storage
+
+- name: Create a ext4 filesystem on "{{ UBUNTU_STORAGE_BLOCK }}" and check disk
+  community.general.filesystem:
+    fstype: ext4
+    dev: "{{ UBUNTU_STORAGE_BLOCK }}"
+    # opts: -cc
+  tags:
+    - setup_disk_storage
+
+- name: Mount storage directory
+  become: true
+  ansible.posix.mount:
+    path: "{{ UBUNTU_STORAGE_PATH }}"
+    src: "{{ UBUNTU_STORAGE_BLOCK }}"
+    fstype: ext4
+    opts: defaults
+    state: present
+  tags:
+    - setup_disk_storage
+
+- name: Create a directory to move docker
+  become: true
+  ansible.builtin.file:
+    path: "{{ UBUNTU_DOCKER_NEW_PATH }}"
+    state: directory
+    mode: '0755'
+  tags:
+    - docker_storage
+
+- name: Stop service docker, if started
+  become: true
+  ansible.builtin.service:
+    name: docker
+    state: stopped
+  tags:
+    - docker_storage
+    - sync_docker_files
+
+- name: Stop service docker.socket, if started
+  become: true
+  ansible.builtin.service:
+    name: docker.socket
+    state: stopped
+  tags:
+    - docker_storage
+    - sync_docker_files
+
+- name: Copy all docker files from previous location
+  become: true
+  ansible.posix.synchronize:
+    src: /var/lib/docker/
+    dest: "{{ UBUNTU_DOCKER_NEW_PATH }}"
+    compress: false
+  delegate_to: "{{ inventory_hostname }}"
+  tags:
+    - docker_storage
+    - sync_docker_files
+
+- name: Copy docker daemon config path file template
+  become: true
+  template:
+    src: templates/daemon.json.j2
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+  tags:
+    - docker_storage
+    - sync_docker_files
+
+- name: Re-start docker service, if stopped
+  become: true
+  ansible.builtin.service:
+    name: docker
+    state: started
+  tags:
+    - docker_storage
+    - sync_docker_files

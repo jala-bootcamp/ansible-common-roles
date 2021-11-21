@@ -1,0 +1,4 @@
+---
+UBUNTU_STORAGE_PATH: /mnt/storage
+UBUNTU_DOCKER_NEW_PATH: /mnt/storage/docker
+UBUNTU_STORAGE_BLOCK: /dev/sdb
